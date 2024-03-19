@@ -5,7 +5,12 @@ import World from "./world";
 
 export default class SceneMain implements Scene
 {
-    private world: World = new World();
+    private world: World;
+    constructor(gridWidth: number, gridHeight: number){
+        World.GridWidth = gridWidth;
+        World.GridHeight = gridHeight;
+        this.world = new World()
+    }
     public init(): void {
 
     }
@@ -17,14 +22,14 @@ export default class SceneMain implements Scene
     public stop(): void {
 
     }
-
     public draw(): void {
-        raylib.DrawText(`PAUSED: ${this.world.pause}`, 10, 10, 20, raylib.RED);
+        this.world.draw();
+
     }
     
     public cameraDraw(camera: raylib.Camera2D): void {
 
-        this.world.draw(camera);
+        this.world.cameraDraw(camera);
     }
     
 }
