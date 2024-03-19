@@ -1,9 +1,10 @@
 import Game from "./game";
 import SceneMain from "./sceneMain";
+import SceneSetup from "./sceneSetup";
 
 var game = new Game();
 
-game.setScene(new SceneMain());
+Game.setScene(new SceneSetup());
 
 game.run();
 game.stop();

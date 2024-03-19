@@ -11,33 +11,36 @@ export default class Game {
         zoom: 1
     };
 
-    private windowSize: raylib.Vector2 ;
-    private title: string;
+    private static nextCamPos: raylib.Vector2 = Game.Camera.offset; 
+
+    public static windowSize: raylib.Vector2 ;
+    public static title: string;
 
     private static debug: boolean = false;
 
-    private scene?: Scene;
+    private static scene?: Scene;
 
     constructor()
     {
         dotenv.config();
-        World.GridWidth = Number(process.env.GRID_WIDTH);
-        this.windowSize = { x: Number(process.env.WINDOW_SIZE_X), y: Number(process.env.WINDOW_SIZE_Y) };
-        this.title = process.env.TITLE || "CELLULAR_AUTOMATA";
-        raylib.InitWindow(this.windowSize.x, this.windowSize.y, this.title);
-        raylib.SetTargetFPS(60);
+        World.CellSize = Number(process.env.CELL_SIZE);
+        Game.windowSize = { x: Number(process.env.WINDOW_SIZE_X), y: Number(process.env.WINDOW_SIZE_Y) };
+        Game.title = process.env.TITLE || "CELLULAR_AUTOMATA";
+        raylib.InitWindow(Game.windowSize.x, Game.windowSize.y, Game.title);
+        raylib.SetTargetFPS(120);
+        raylib.SetExitKey(-1);
+        raylib.GuiEnable();
     }
 
     public run() {
         while (!raylib.WindowShouldClose()) {
             let frametime = raylib.GetFrameTime();
             this.input();
-            this.scene?.update(frametime);
-
+            Game.scene?.update(frametime);
             raylib.BeginDrawing();
             raylib.BeginMode2D(Game.Camera);
             raylib.ClearBackground(raylib.BLACK);
-            this.scene?.cameraDraw(Game.Camera);
+            Game.scene?.cameraDraw(Game.Camera);
 
             if(Game.debug) {
                 raylib.DrawFPS(10, 10);
@@ -45,7 +48,7 @@ export default class Game {
 
             raylib.EndMode2D();
             
-            this.scene?.draw();
+            Game.scene?.draw();
 
             if(Game.debug) {
                 raylib.DrawFPS(60, 10);
@@ -63,33 +66,22 @@ export default class Game {
             Game.debug = !Game.debug;
         }
         let camSpeed = 200;
-        let zoomSpeed = 0.5;
-        if(raylib.IsKeyDown(raylib.KEY_LEFT))
+        let zoomSpeed = 0.1;
+        if(raylib.IsMouseButtonDown(raylib.MOUSE_BUTTON_RIGHT))
         {
-            Game.Camera.offset.x += camSpeed * raylib.GetFrameTime();
+            if(raylib.GetGestureDetected() == raylib.GESTURE_DRAG)
+            {
+                Game.Camera.offset = raylib.Vector2Add(Game.Camera.offset, raylib.GetMouseDelta());
+            }
         }
-        if(raylib.IsKeyDown(raylib.KEY_RIGHT))
+        let wheel = raylib.GetMouseWheelMove();
+        if(wheel != 0)
         {
-            Game.Camera.offset.x -= camSpeed * raylib.GetFrameTime();
-        }
-        if(raylib.IsKeyDown(raylib.KEY_UP))
-        {
-            Game.Camera.offset.y += camSpeed * raylib.GetFrameTime();
-        }
-        if(raylib.IsKeyDown(raylib.KEY_DOWN))
-        {
-            Game.Camera.offset.y -= camSpeed * raylib.GetFrameTime();
-        }
-        if(raylib.IsKeyDown(raylib.KEY_EQUAL))
-        {
-            Game.Camera.zoom += zoomSpeed * raylib.GetFrameTime();
-        }
-        if(raylib.IsKeyDown(raylib.KEY_MINUS))
-        {
-            Game.Camera.zoom -= zoomSpeed * raylib.GetFrameTime();
+            Game.Camera.zoom = Math.max(0, Game.Camera.zoom + zoomSpeed * wheel);
+
         }
     }
-    public setScene(scene: Scene) {
+    public static setScene(scene: Scene) {
         this.scene?.stop();
 
         this.scene = scene;
